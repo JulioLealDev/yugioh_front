@@ -1,15 +1,36 @@
 import React from 'react';
 
-function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, draggedCard, setDraggedCard }) {
+function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, draggedCard, setDraggedCard, sideDeck, setSideDeck }) {
   const totalSlots = 15;
 
   const handleDrop = (e) => {
     e.preventDefault();
-    if (draggedCard) {
+    const data = e.dataTransfer.getData('application/json');
+  
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+  
+        if (parsed.from === 'side') {
+          const updatedSideDeck = [...sideDeck];
+          const cardIndex = updatedSideDeck.findIndex(c => c.id === parsed.card.id);
+          if (cardIndex !== -1) {
+            updatedSideDeck.splice(cardIndex, 1);
+            setSideDeck(updatedSideDeck);
+          }
+        }
+  
+        handleAddToExtraDeck(parsed.card);
+  
+      } catch (error) {
+        console.error('Erro ao fazer parse no drop dentro do Extra Deck:', error);
+      }
+    } else if (draggedCard) {
       handleAddToExtraDeck(draggedCard);
       setDraggedCard(null);
     }
   };
+  
 
   return (
     <div className="mt-4">
@@ -31,6 +52,10 @@ function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, drag
                   alt={extraDeck[index].name}
                   className="cursor-pointer w-full h-full object-contain"
                   draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', extraDeck[index].name);
+                    e.dataTransfer.setData('application/json', JSON.stringify({ card: extraDeck[index], from: 'extra' }));
+                  }}
                   onClick={() => setSelectedCard(extraDeck[index])}
                 />
               )}

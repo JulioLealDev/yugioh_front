@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { FaSortAlphaDown } from 'react-icons/fa';
 
-function MainDeck({ mainDeck, setSelectedCard, handleDragStartFromMainDeck, handleAddToMainDeck, setMainDeck }) {
+function MainDeck({ mainDeck, sideDeck, extraDeck, setSelectedCard, handleAddToMainDeck, setMainDeck, setSideDeck, setExtraDeck, handleDragStart }) {
   const timerRef = useRef(null);
 
   const handleMouseDown = (e, card) => {
@@ -16,8 +16,13 @@ function MainDeck({ mainDeck, setSelectedCard, handleDragStartFromMainDeck, hand
   };
 
   const sortDeckAlphabetically = () => {
-    const sortedDeck = [...mainDeck].sort((a, b) => a.name.localeCompare(b.name));
-    setMainDeck(sortedDeck);
+    const sortedMain = [...mainDeck].sort((a, b) => a.name.localeCompare(b.name));
+    const sortedSide = [...sideDeck].sort((a, b) => a.name.localeCompare(b.name));
+    const sortedExtra = [...extraDeck].sort((a, b) => a.name.localeCompare(b.name));
+
+    setMainDeck(sortedMain);
+    setSideDeck(sortedSide);
+    setExtraDeck(sortedExtra);
   };
 
   const totalSlots = Math.max(40, Math.ceil(mainDeck.length / 10) * 10);
@@ -27,13 +32,25 @@ function MainDeck({ mainDeck, setSelectedCard, handleDragStartFromMainDeck, hand
     const data = e.dataTransfer.getData('application/json');
     if (data) {
       try {
-        const card = JSON.parse(data);
-        handleAddToMainDeck(card);
+        const parsed = JSON.parse(data);
+
+        if (parsed.from === 'side') {
+          const updatedSideDeck = [...sideDeck];
+          const cardIndex = updatedSideDeck.findIndex(c => c.id === parsed.card.id);
+          if (cardIndex !== -1) {
+            updatedSideDeck.splice(cardIndex, 1);
+            setSideDeck(updatedSideDeck);
+          }
+        }
+
+        handleAddToMainDeck(parsed.card);
+
       } catch (error) {
         console.error('Erro ao fazer parse no drop dentro do Main Deck:', error);
       }
     }
   };
+
 
   return (
     <div
@@ -61,14 +78,13 @@ function MainDeck({ mainDeck, setSelectedCard, handleDragStartFromMainDeck, hand
                   src={mainDeck[index].card_images[0].image_url_small}
                   alt={mainDeck[index].name}
                   className="cursor-pointer w-full h-full object-contain"
-                  draggable
+                  draggable={true}
                   onDragStart={(e) => {
-                    e.dataTransfer.setData('application/json', JSON.stringify(mainDeck[index]));
+                    console.log("🔥 DRAGSTART fired!");
+                    e.dataTransfer.setData('text/plain', mainDeck[index].name);
+                    e.dataTransfer.setData('application/json', JSON.stringify({ card: mainDeck[index], from: 'main' }));
                   }}
                   onClick={() => setSelectedCard(mainDeck[index])}
-                  onMouseDown={(e) => handleMouseDown(e, mainDeck[index])}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
                 />
               )}
             </div>

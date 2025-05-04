@@ -17,7 +17,6 @@ function DeckEditor() {
   const [sideDeck, setSideDeck] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [draggedCard, setDraggedCard] = useState(null);
-  const [draggedCardFromMainDeck, setDraggedCardFromMainDeck] = useState(null);
   const cardsPerPage = 72;
 
   const forbiddenFrameTypesSide = [
@@ -106,17 +105,23 @@ function DeckEditor() {
     }
   };
 
-  const handleDragStartFromMainDeck = (e, card, index) => {
-    setDraggedCardFromMainDeck({ card, index });
-  };
-
   const handleDropOutsideMainDeck = (e) => {
     e.preventDefault();
-    if (draggedCardFromMainDeck) {
-      const updatedMainDeck = [...mainDeck];
-      updatedMainDeck.splice(draggedCardFromMainDeck.index, 1);
-      setMainDeck(updatedMainDeck);
-      setDraggedCardFromMainDeck(null);
+    const data = e.dataTransfer.getData('application/json');
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.from === 'main') {
+          const updatedMainDeck = [...mainDeck];
+          const cardIndex = updatedMainDeck.findIndex(c => c.id === parsed.card.id);
+          if (cardIndex !== -1) {
+            updatedMainDeck.splice(cardIndex, 1);
+            setMainDeck(updatedMainDeck);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao fazer parse fora do Main Deck:', error);
+      }
     }
   };
 
@@ -153,10 +158,14 @@ function DeckEditor() {
         <div className="mb-2" onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
             <MainDeck
                 mainDeck={mainDeck}
+                sideDeck={sideDeck}
+                extraDeck={extraDeck}
                 setSelectedCard={setSelectedCard}
-                handleDragStartFromMainDeck={handleDragStartFromMainDeck}
                 handleAddToMainDeck={handleAddToMainDeck}
                 setMainDeck={setMainDeck}
+                setSideDeck={setSideDeck}
+                setExtraDeck={setExtraDeck}
+                handleDragStart={handleDragStart}
             />
         </div>
         <div className="mb-2">
@@ -166,11 +175,17 @@ function DeckEditor() {
                 handleAddToExtraDeck={handleAddToExtraDeck}
                 draggedCard={draggedCard}
                 setDraggedCard={setDraggedCard}
+                setSideDeck={setSideDeck}
+                sideDeck={sideDeck}
             />
         </div>
         <div>
           <SideDeck
                 sideDeck={sideDeck}
+                mainDeck={mainDeck}
+                setMainDeck={setMainDeck}
+                extraDeck={extraDeck}
+                setExtraDeck={setExtraDeck}
                 setSelectedCard={setSelectedCard}
                 handleAddToSideDeck={handleAddToSideDeck}
                 draggedCard={draggedCard}
