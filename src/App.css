@@ -1,0 +1,27 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Deixar o body cheio da tela */
+body {
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Arial', sans-serif;
+  background-color: #1a1a1a; /* fundo escuro para dar estilo de aplicativo */
+  color: white;
+}
+
+/* Deixar o app principal ocupando a tela */
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
