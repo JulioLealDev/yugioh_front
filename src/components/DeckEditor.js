@@ -39,63 +39,65 @@ function DeckEditor() {
     ].filter(c => c.id === cardId).length;
   };
 
-  const handleAddToMainDeck = (card) => {
+  const handleAddToMainDeck = (card, isMove = false) => {
+    isMove = isMove ?? false; // 👈 forçar false se vier undefined
     if (forbiddenFrameTypesMain.includes(card.frameType)) {
       alert('Esta carta não pode ser adicionada ao Main Deck.');
       return;
     }
-
-    if (countTotalCopies(card.id) >= 3) {
+    if (!isMove && countTotalCopies(card.id) >= 3) {
       alert('Você só pode adicionar até 3 cópias da mesma carta no deck (Main + Extra + Side)!');
       return;
     }
-
     if (mainDeck.length < 60) {
       setMainDeck([...mainDeck, card]);
     } else {
       alert('Main Deck já tem 60 cartas!');
     }
   };
-
-  const handleAddToExtraDeck = (card) => {
+  
+  const handleAddToExtraDeck = (card, isMove = false) => {
+    isMove = isMove ?? false; // 👈 forçar false
     if (!allowedFrameTypesExtra.includes(card.frameType)) {
       alert('Esta carta não pode ser adicionada ao Extra Deck.');
       return;
     }
-
-    if (countTotalCopies(card.id) >= 3) {
+    if (!isMove && countTotalCopies(card.id) >= 3) {
       alert('Você só pode adicionar até 3 cópias da mesma carta no deck (Main + Extra + Side)!');
       return;
     }
-
     if (extraDeck.length < 15) {
       setExtraDeck([...extraDeck, card]);
     } else {
       alert('Extra Deck já tem 15 cartas!');
     }
   };
-
-  const handleAddToSideDeck = (card) => {
+  
+  const handleAddToSideDeck = (card, isMove = false) => {
+    isMove = isMove ?? false; // 👈 forçar false
     if (forbiddenFrameTypesSide.includes(card.frameType)) {
       alert('Esta carta não pode ser adicionada ao Side Deck.');
       return;
     }
-
-    if (countTotalCopies(card.id) >= 3) {
+    if (!isMove && countTotalCopies(card.id) >= 3) {
       alert('Você só pode adicionar até 3 cópias da mesma carta no deck (Main + Extra + Side)!');
       return;
     }
-
     if (sideDeck.length < 15) {
       setSideDeck([...sideDeck, card]);
     } else {
       alert('Side Deck já tem 15 cartas!');
     }
   };
+  
 
   const handleDragStart = (e, card) => {
     setDraggedCard(card);
+  
+    // 🔥 Setar corretamente o dataTransfer!
+    e.dataTransfer.setData('application/json', JSON.stringify(card));
   };
+  
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -111,6 +113,7 @@ function DeckEditor() {
     if (data) {
       try {
         const parsed = JSON.parse(data);
+
         if (parsed.from === 'main') {
           const updatedMainDeck = [...mainDeck];
           const cardIndex = updatedMainDeck.findIndex(c => c.id === parsed.card.id);
@@ -119,6 +122,7 @@ function DeckEditor() {
             setMainDeck(updatedMainDeck);
           }
         }
+
       } catch (error) {
         console.error('Erro ao fazer parse fora do Main Deck:', error);
       }

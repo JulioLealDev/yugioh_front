@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, draggedCard, setDraggedCard, sideDeck, setSideDeck }) {
+function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, draggedCard, setDraggedCard, sideDeck, setSideDeck, mainDeck, setMainDeck }) {
   const totalSlots = 15;
 
   const handleDrop = (e) => {
@@ -11,22 +11,40 @@ function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, drag
       try {
         const parsed = JSON.parse(data);
   
-        if (parsed.from === 'side') {
-          const updatedSideDeck = [...sideDeck];
-          const cardIndex = updatedSideDeck.findIndex(c => c.id === parsed.card.id);
-          if (cardIndex !== -1) {
-            updatedSideDeck.splice(cardIndex, 1);
-            setSideDeck(updatedSideDeck);
-          }
-        }
+        if (parsed.card && parsed.from) {
+          const card = parsed.card;
   
-        handleAddToExtraDeck(parsed.card);
+          if (parsed.from === 'side') {
+            const updatedSideDeck = [...sideDeck];
+            const cardIndex = updatedSideDeck.findIndex(c => c.id === card.id);
+            if (cardIndex !== -1) {
+              updatedSideDeck.splice(cardIndex, 1);
+              setSideDeck(updatedSideDeck);
+            }
+            handleAddToExtraDeck(card, true);
+          } else if (parsed.from === 'main') {
+            const updatedMainDeck = [...mainDeck];
+            const cardIndex = updatedMainDeck.findIndex(c => c.id === card.id);
+            if (cardIndex !== -1) {
+              updatedMainDeck.splice(cardIndex, 1);
+              setMainDeck(updatedMainDeck);
+            }
+            handleAddToExtraDeck(card, true);
+          } else if (parsed.from === 'extra') {
+            // Extra -> Extra
+            handleAddToExtraDeck(card, false);
+          }
+  
+        } else {
+          // Vindo da galeria
+          handleAddToExtraDeck(parsed, false);
+        }
   
       } catch (error) {
         console.error('Erro ao fazer parse no drop dentro do Extra Deck:', error);
       }
     } else if (draggedCard) {
-      handleAddToExtraDeck(draggedCard);
+      handleAddToExtraDeck(draggedCard, false);
       setDraggedCard(null);
     }
   };
@@ -42,10 +60,7 @@ function ExtraDeck({ extraDeck = [], setSelectedCard, handleAddToExtraDeck, drag
       >
         <div className="grid grid-cols-15 gap-0 w-full h-full">
           {Array.from({ length: totalSlots }).map((_, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-center aspect-[7/10]"
-            >
+            <div key={index} className="flex items-center justify-center aspect-[7/10]">
               {extraDeck[index] && (
                 <img
                   src={extraDeck[index].card_images[0].image_url_small}
